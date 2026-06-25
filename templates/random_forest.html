@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="card wide">
+  <p class="eyebrow">Modelo de clasificación</p>
+  <h1>Random Forest: predicción de tubo</h1>
+  <p>Captura los datos del paciente. Los textos deben coincidir con valores existentes en la base de datos.</p>
+
+  {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+  {% if result %}
+    <div class="success">
+      <h2>Resultado</h2>
+      <p>¿El paciente requerirá tubo? <strong>{{ result.prediction }}</strong></p>
+      <p>Registros usados para entrenar: <strong>{{ result.n_rows }}</strong></p>
+      {% if result.probabilities %}
+        <h3>Probabilidades</h3>
+        <ul>
+          {% for label, prob in result.probabilities.items() %}
+            <li>{{ label }}: {{ prob }}%</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <form method="post" class="form">
+    <label>Edad
+      <input type="number" name="edad" step="1" min="0" value="{{ sample.edad }}" required>
+    </label>
+
+    <label>Género
+      <input name="genero" list="generos" value="{{ sample.genero }}" required>
+      <datalist id="generos">
+        {% for item in options.genero %}<option value="{{ item }}">{% endfor %}
+      </datalist>
+    </label>
+
+    <label>Diagnóstico
+      <input name="dx" list="diagnosticos" value="{{ sample.dx }}" required>
+      <datalist id="diagnosticos">
+        {% for item in options.dx %}<option value="{{ item }}">{% endfor %}
+      </datalist>
+    </label>
+
+    <label>Intervención
+      <textarea name="intervencion" rows="3" required>{{ sample.intervencion }}</textarea>
+    </label>
+
+    <button class="button" type="submit">Predecir</button>
+  </form>
+</section>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="card wide">
+  <p class="eyebrow">Código C convertido a Python</p>
+  <h1>{{ scenario.title }}</h1>
+  <p>Se calcula una regresión lineal con los datos guardados en MySQL y se estima el valor esperado.</p>
+
+  {% if error %}<div class="alert">{{ error }}</div>{% endif %}
+  {% if result %}
+    <div class="success">
+      <h2>Resultado</h2>
+      <p>{{ scenario.unit }}: <strong>{{ result.prediction }}</strong></p>
+      <p>Modelo: <strong>y = {{ result.m }}x + {{ result.b }}</strong></p>
+      <p>Registros procesados: <strong>{{ result.n_rows }}</strong></p>
+    </div>
+  {% endif %}
+
+  <form method="post" class="form">
+    <label>Tipo de predicción
+      <select name="scenario" onchange="this.form.submit()">
+        {% for key, value in scenarios.items() %}
+          <option value="{{ key }}" {% if key == scenario_key %}selected{% endif %}>{{ value.title }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label>{{ scenario.label }}
+      <input type="number" name="value" step="0.01" value="{{ input_value }}" required>
+    </label>
+
+    <button class="button" type="submit">Calcular predicción</button>
+  </form>
+</section>
+{% endblock %}

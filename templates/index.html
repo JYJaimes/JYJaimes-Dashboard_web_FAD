@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="hero">
+  <p class="eyebrow">Proyecto integrado</p>
+  <h1>Random Forest + Probabilidad en un dashboard web</h1>
+  <p>Aplicación Flask conectada a una sola base MySQL en Aiven. Render entrega la URL pública para el profesor.</p>
+  <div class="actions">
+    <a class="button" href="/random-forest">Abrir Random Forest</a>
+    <a class="button secondary" href="/probabilidad">Abrir cálculo de probabilidad</a>
+  </div>
+</section>
+
+<section class="grid">
+  <article class="card">
+    <h2>Random Forest</h2>
+    <p>Predice si un paciente requerirá tubo usando edad, género, diagnóstico e intervención.</p>
+    <small>Tabla usada: <strong>registro_a</strong></small>
+  </article>
+  <article class="card">
+    <h2>Probabilidad / regresión</h2>
+    <p>Versión en Python del programa original en C. Calcula una recta y hace predicciones.</p>
+    <small>Tabla principal: <strong>ventas_historico</strong></small>
+  </article>
+</section>
+
+<section class="card">
+  <h2>Estado de tablas</h2>
+  {% if not db_ok %}
+    <p class="alert">Todavía no hay conexión a la base de datos o faltan variables de entorno.</p>
+  {% endif %}
+  <div class="stats">
+    {% for table, count in counts.items() %}
+      <div class="stat">
+        <span>{{ table }}</span>
+        <strong>{{ count if count is not none else 'sin conexión' }}</strong>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

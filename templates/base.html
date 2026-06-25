@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ title or 'Dashboard ML y Probabilidad' }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+  <nav class="nav">
+    <a href="/" class="brand">Dashboard Web</a>
+    <div>
+      <a href="/random-forest">Random Forest</a>
+      <a href="/probabilidad">Probabilidad / Regresión</a>
+      <a href="/salud">Salud</a>
+    </div>
+  </nav>
+  <main class="container">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>
