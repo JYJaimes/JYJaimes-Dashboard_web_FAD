@@ -96,3 +96,12 @@ Start command:
 ```text
 gunicorn app:app
 ```
+
+## Actualización v5: gráficas de predicción
+
+Se agregaron gráficas al inicio de las métricas:
+
+- Random Forest: gráfica de barras con la probabilidad de cada clase.
+- Probabilidad / regresión: gráfica de dispersión con datos históricos, línea de regresión y punto predicho.
+
+Archivos modificados: `app.py`, `templates/base.html`, `templates/random_forest.html`, `templates/probabilidad.html` y `static/css/styles.css`.

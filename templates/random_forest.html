@@ -8,7 +8,14 @@
   {% if error %}<div class="alert">{{ error }}</div>{% endif %}
   {% if result %}
     <div class="success">
-      <h2>Resultado</h2>
+      <h2>Gráfica de predicción</h2>
+      {% if result.chart %}
+        <div class="chart-box">
+          <canvas id="rfPredictionChart"></canvas>
+        </div>
+      {% endif %}
+
+      <h2>Métricas de la predicción</h2>
       <p>¿El paciente requerirá tubo? <strong>{{ result.prediction }}</strong></p>
       <p>Registros usados para entrenar: <strong>{{ result.n_rows }}</strong></p>
       {% if result.probabilities %}
@@ -48,4 +55,40 @@
     <button class="button" type="submit">Predecir</button>
   </form>
 </section>
+
+{% if result and result.chart %}
+<script>
+  const rfChartData = {{ result.chart | tojson }};
+  const rfCtx = document.getElementById('rfPredictionChart');
+  new Chart(rfCtx, {
+    type: 'bar',
+    data: {
+      labels: rfChartData.labels,
+      datasets: [{
+        label: 'Probabilidad (%)',
+        data: rfChartData.values,
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          title: { display: true, text: 'Probabilidad (%)' }
+        },
+        x: {
+          title: { display: true, text: 'Clase predicha' }
+        }
+      },
+      plugins: {
+        legend: { display: true },
+        title: { display: true, text: 'Distribución de probabilidad del Random Forest' }
+      }
+    }
+  });
+</script>
+{% endif %}
 {% endblock %}

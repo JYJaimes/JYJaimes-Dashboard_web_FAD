@@ -8,7 +8,14 @@
   {% if error %}<div class="alert">{{ error }}</div>{% endif %}
   {% if result %}
     <div class="success">
-      <h2>Resultado</h2>
+      <h2>Gráfica de predicción</h2>
+      {% if result.chart %}
+        <div class="chart-box">
+          <canvas id="linearPredictionChart"></canvas>
+        </div>
+      {% endif %}
+
+      <h2>Métricas de la predicción</h2>
       <p>{{ scenario.unit }}: <strong>{{ result.prediction }}</strong></p>
       <p>Modelo: <strong>y = {{ result.m }}x + {{ result.b }}</strong></p>
       <p>Registros procesados: <strong>{{ result.n_rows }}</strong></p>
@@ -31,4 +38,55 @@
     <button class="button" type="submit">Calcular predicción</button>
   </form>
 </section>
+
+{% if result and result.chart %}
+<script>
+  const linearChartData = {{ result.chart | tojson }};
+  const linearCtx = document.getElementById('linearPredictionChart');
+  new Chart(linearCtx, {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Datos históricos',
+          data: linearChartData.points,
+          pointRadius: 5
+        },
+        {
+          label: 'Línea de regresión',
+          data: linearChartData.line,
+          type: 'line',
+          fill: false,
+          pointRadius: 0,
+          borderWidth: 3
+        },
+        {
+          label: 'Predicción ingresada',
+          data: linearChartData.prediction,
+          pointRadius: 8,
+          pointHoverRadius: 10
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          type: 'linear',
+          position: 'bottom',
+          title: { display: true, text: linearChartData.x_label }
+        },
+        y: {
+          title: { display: true, text: linearChartData.y_label }
+        }
+      },
+      plugins: {
+        legend: { display: true },
+        title: { display: true, text: 'Datos reales, recta calculada y punto predicho' }
+      }
+    }
+  });
+</script>
+{% endif %}
 {% endblock %}

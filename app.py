@@ -207,6 +207,9 @@ def train_linear_model(table: str, x_col: str, y_col: str):
 
     df = pd.read_sql(f"SELECT `{x_col}`, `{y_col}` FROM `{table}`", get_engine())
     df = df.dropna()
+    df[x_col] = pd.to_numeric(df[x_col], errors="coerce")
+    df[y_col] = pd.to_numeric(df[y_col], errors="coerce")
+    df = df.dropna().reset_index(drop=True)
     if len(df) < 2:
         raise RuntimeError(f"No hay suficientes datos en {table}.")
 
@@ -214,15 +217,48 @@ def train_linear_model(table: str, x_col: str, y_col: str):
     y = df[y_col].astype(float)
     model = LinearRegression()
     model.fit(X, y)
-    return model, len(df)
+    return model, len(df), df
+
+
+def build_regression_chart(df: pd.DataFrame, x_col: str, y_col: str, m: float, b: float,
+                           input_value: float, prediction: float) -> dict:
+    """Prepara puntos para graficar datos reales, línea de regresión y predicción."""
+    chart_df = df[[x_col, y_col]].astype(float).sort_values(x_col)
+
+    # Evita mandar demasiados puntos al navegador si la tabla crece.
+    if len(chart_df) > 120:
+        chart_df = chart_df.sample(n=120, random_state=42).sort_values(x_col)
+
+    x_min = float(min(chart_df[x_col].min(), input_value))
+    x_max = float(max(chart_df[x_col].max(), input_value))
+    if x_min == x_max:
+        x_min -= 1
+        x_max += 1
+
+    return {
+        "x_label": x_col,
+        "y_label": y_col,
+        "points": [
+            {"x": round(float(row[x_col]), 4), "y": round(float(row[y_col]), 4)}
+            for _, row in chart_df.iterrows()
+        ],
+        "line": [
+            {"x": round(x_min, 4), "y": round(float(m * x_min + b), 4)},
+            {"x": round(x_max, 4), "y": round(float(m * x_max + b), 4)},
+        ],
+        "prediction": [
+            {"x": round(float(input_value), 4), "y": round(float(prediction), 4)}
+        ],
+    }
 
 
 def predict_linear(table: str, x_col: str, y_col: str, value: float):
-    model, n_rows = train_linear_model(table, x_col, y_col)
+    model, n_rows, df = train_linear_model(table, x_col, y_col)
     pred = float(model.predict(pd.DataFrame([{x_col: float(value)}]))[0])
     m = float(model.coef_[0])
     b = float(model.intercept_)
-    return pred, m, b, n_rows
+    chart = build_regression_chart(df, x_col, y_col, m, b, float(value), pred)
+    return pred, m, b, n_rows, chart
 
 
 @app.route("/")
@@ -251,10 +287,17 @@ def random_forest_page():
             dx = request.form.get("dx", "").strip()
             intervencion = request.form.get("intervencion", "").strip()
             prediction, probabilities, n_rows = predict_tubo(edad, genero, dx, intervencion)
+            chart = None
+            if probabilities:
+                chart = {
+                    "labels": list(probabilities.keys()),
+                    "values": list(probabilities.values()),
+                }
             result = {
                 "prediction": prediction,
                 "probabilities": probabilities,
                 "n_rows": n_rows,
+                "chart": chart,
             }
             sample = {"edad": edad, "genero": genero, "dx": dx, "intervencion": intervencion}
         except Exception as exc:
@@ -310,7 +353,7 @@ def probabilidad_page():
     if request.method == "POST":
         try:
             input_value = float(request.form.get("value", scenario["default"]))
-            pred, m, b, n_rows = predict_linear(
+            pred, m, b, n_rows, chart = predict_linear(
                 scenario["table"], scenario["x_col"], scenario["y_col"], input_value
             )
             result = {
@@ -318,6 +361,7 @@ def probabilidad_page():
                 "m": round(m, 4),
                 "b": round(b, 4),
                 "n_rows": n_rows,
+                "chart": chart,
             }
         except Exception as exc:
             error = str(exc)
