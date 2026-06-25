@@ -1,0 +1,27 @@
+FIX URGENTE PARA RENDER - ERROR PANDAS / PYTHON 3.14
+
+El error ocurre porque Render esta usando Python 3.14.3 y pandas/scikit-learn se intentan compilar.
+La solucion es forzar Python 3.11.9.
+
+1) En GitHub, confirma que el archivo .python-version este en la RAIZ del repositorio.
+   Debe contener exactamente:
+   3.11.9
+
+2) En Render > Environment agrega:
+   PYTHON_VERSION=3.11.9
+
+3) En Render > Settings configura:
+   Build Command:
+   python -m pip install --upgrade pip setuptools wheel && python -m pip install --only-binary=:all: -r requirements.txt
+
+   Start Command:
+   gunicorn --bind 0.0.0.0:$PORT app:app
+
+4) En Render > Settings > Root Directory:
+   - Si app.py esta en la raiz del repo: dejalo vacio.
+   - Si app.py esta dentro de una carpeta, pon el nombre de esa carpeta.
+
+5) Haz:
+   Manual Deploy > Clear build cache & deploy
+
+Si vuelve a salir /python3.14 en el log, Render todavia no esta leyendo PYTHON_VERSION o .python-version.
